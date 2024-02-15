@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Read EC2 instance IDs from user input
+read -p "Enter EC2 instance IDs (space-separated): " -a instance_ids
+
+# Stop instances gracefully
+for id in "${instance_ids[@]}"; do
+    aws ec2 modify-instance-attribute --instance-id $id --instance-initiated-shutdown-behavior stop
+    aws ec2 stop-instances --instance-ids $id
+done
+
+# Wait for instances to stop (optional)
+for id in "${instance_ids[@]}"; do
+    aws ec2 wait instance-stopped --instance-ids $id
+done
+
+# Start instances
+for id in "${instance_ids[@]}"; do
+    aws ec2 start-instances --instance-ids $id
+done
+
+# Wait for instances to start (optional)
+for id in "${instance_ids[@]}"; do
+    aws ec2 wait instance-running --instance-ids $id
+done
+
+echo "EC2 instances have been gracefully stopped and started."
